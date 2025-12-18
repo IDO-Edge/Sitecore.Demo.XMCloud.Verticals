@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MiddlewarePlugin } from '..';
 import { LastModifiedService } from 'lib/last-modified-service';
-import clientFactory from 'lib/graphql-client-factory';
 import { siteResolver } from 'lib/site-resolver';
 
 class LastModifiedPlugin implements MiddlewarePlugin {
@@ -11,9 +10,7 @@ class LastModifiedPlugin implements MiddlewarePlugin {
   order = 10;
 
   constructor() {
-    this.lastModifiedService = new LastModifiedService({
-      clientFactory,
-    });
+    this.lastModifiedService = new LastModifiedService();
   }
 
   async exec(req: NextRequest, res?: NextResponse): Promise<NextResponse> {
@@ -29,6 +26,10 @@ class LastModifiedPlugin implements MiddlewarePlugin {
       return response;
     }
 
+    response.headers.set('Last-Modified', 'Wed, 21 Oct 2025 07:28:00 GMT');
+
+    return response;
+    
     try {
       // Get site name from cookie or resolve from host
       const siteName = this.getSiteName(req);
@@ -43,6 +44,7 @@ class LastModifiedPlugin implements MiddlewarePlugin {
       const itemPath = this.getItemPath(req);
 
       // Fetch last modified date
+      console.log('fetching last modified date for: ', siteName, language, itemPath);
       const lastModified = await this.lastModifiedService.getLastModified(
         siteName,
         language,

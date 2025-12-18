@@ -1,13 +1,14 @@
-import {
-  GraphQLRequestClient,
-  GraphQLRequestClientFactory,
-} from '@sitecore-jss/sitecore-jss-nextjs/graphql';
+import { GraphQLClient } from 'graphql-request';
+import { getEdgeProxyContentUrl } from '@sitecore-jss/sitecore-jss-nextjs/graphql';
+import config from 'temp/config';
 
 const ITEM_UPDATED_QUERY = /* GraphQL */ `
   query ItemUpdated($siteName: String!, $language: String!, $itemPath: String!) {
     layout(site: $siteName, routePath: $itemPath, language: $language) {
       item {
-        updated
+        field(name: "__updated") {
+          value
+        }
       }
     }
   }
@@ -16,20 +17,20 @@ const ITEM_UPDATED_QUERY = /* GraphQL */ `
 interface ItemUpdatedResponse {
   layout: {
     item: {
-      updated: string;
+      __updated: string;
     } | null;
   } | null;
 }
 
-export interface LastModifiedServiceConfig {
-  clientFactory: GraphQLRequestClientFactory;
-}
-
 export class LastModifiedService {
-  private graphQLClient: GraphQLRequestClient;
+  private client: GraphQLClient;
 
-  constructor(config: LastModifiedServiceConfig) {
-    this.graphQLClient = config.clientFactory();
+  constructor() {
+    if (!config.sitecoreEdgeContextId) {
+      throw new Error('sitecoreEdgeContextId is required for LastModifiedService.');
+    }
+    const endpoint = getEdgeProxyContentUrl(config.sitecoreEdgeContextId, config.sitecoreEdgeUrl);
+    this.client = new GraphQLClient(endpoint, { fetch });
   }
 
   async getLastModified(
@@ -38,16 +39,17 @@ export class LastModifiedService {
     itemPath: string
   ): Promise<string | null> {
     try {
-      const data = await this.graphQLClient.request<ItemUpdatedResponse>(ITEM_UPDATED_QUERY, {
+      const data = await this.client.request<ItemUpdatedResponse>(ITEM_UPDATED_QUERY, {
         siteName,
         language,
         itemPath,
       });
 
-      const updated = data?.layout?.item?.updated;
-
+      const updated = data?.layout?.item?.__updated;
+      console.log('item:', data.layout.item)
       return updated || null;
     } catch (error) {
+      console.error('error in getLastModified:', error);
       return null;
     }
   }
