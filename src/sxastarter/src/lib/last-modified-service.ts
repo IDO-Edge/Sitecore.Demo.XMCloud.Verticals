@@ -44,9 +44,10 @@ export class LastModifiedService {
         language,
         itemPath,
       });
-
       const updated = data?.layout?.item?.__updated;
-      console.log('item:', data.layout.item)
+      if (data?.layout?.item != null) {
+        console.debug('item:', data?.layout?.item);
+      }
       return updated || null;
     } catch (error) {
       console.error('error in getLastModified:', error);

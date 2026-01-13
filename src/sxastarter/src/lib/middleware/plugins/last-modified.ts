@@ -26,10 +26,6 @@ class LastModifiedPlugin implements MiddlewarePlugin {
       return response;
     }
 
-    response.headers.set('Last-Modified', 'Wed, 21 Oct 2025 07:28:00 GMT');
-
-    return response;
-    
     try {
       // Get site name from cookie or resolve from host
       const siteName = this.getSiteName(req);
@@ -44,7 +40,7 @@ class LastModifiedPlugin implements MiddlewarePlugin {
       const itemPath = this.getItemPath(req);
 
       // Fetch last modified date
-      console.log('fetching last modified date for: ', siteName, language, itemPath);
+      console.debug('fetching last modified date for: ', siteName, language, itemPath);
       const lastModified = await this.lastModifiedService.getLastModified(
         siteName,
         language,
@@ -54,7 +50,7 @@ class LastModifiedPlugin implements MiddlewarePlugin {
       if (lastModified) {
         const httpDate = this.lastModifiedService.formatHttpDate(lastModified);
         response.headers.set('Last-Modified', httpDate);
-        console.log('set Last-Modified header: %s', httpDate);
+        console.debug('set Last-Modified header: %s', httpDate);
       }
     } catch (error) {
       console.error('error in last modified middleware: %o', error);
