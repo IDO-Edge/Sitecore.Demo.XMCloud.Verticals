@@ -23,14 +23,21 @@ interface ItemUpdatedResponse {
 }
 
 export class LastModifiedService {
-  private client: GraphQLClient;
+  private client: GraphQLClient | null;
 
   constructor() {
-    if (!config.sitecoreEdgeContextId) {
-      throw new Error('sitecoreEdgeContextId is required for LastModifiedService.');
+    if (config.sitecoreEdgeContextId) {
+      const endpoint = getEdgeProxyContentUrl(config.sitecoreEdgeContextId, config.sitecoreEdgeUrl);
+      this.client = new GraphQLClient(endpoint, { fetch });
+    } else if (config.graphQLEndpoint) {
+      const headers: Record<string, string> = {};
+      if (config.sitecoreApiKey) {
+        headers['sc_apikey'] = config.sitecoreApiKey;
+      }
+      this.client = new GraphQLClient(config.graphQLEndpoint, { fetch, headers });
+    } else {
+      this.client = null;
     }
-    const endpoint = getEdgeProxyContentUrl(config.sitecoreEdgeContextId, config.sitecoreEdgeUrl);
-    this.client = new GraphQLClient(endpoint, { fetch });
   }
 
   async getLastModified(
@@ -38,6 +45,10 @@ export class LastModifiedService {
     language: string,
     itemPath: string
   ): Promise<string | null> {
+    if (!this.client) {
+      return null;
+    }
+
     try {
       const data = await this.client.request<ItemUpdatedResponse>(ITEM_UPDATED_QUERY, {
         siteName,
