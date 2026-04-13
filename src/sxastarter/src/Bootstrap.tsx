@@ -13,7 +13,9 @@ const Bootstrap = (props: SitecorePageProps): JSX.Element | null => {
   // Browser ClientSDK init allows for page view events to be tracked
   useEffect(() => {
     const pageState = props.layoutData?.sitecore?.context.pageState;
-    if (process.env.NODE_ENV === 'development')
+    if (!config.sitecoreEdgeContextId) {
+      // CloudSDK requires sitecoreEdgeContextId — skip when using a custom GraphQL proxy
+    } else if (process.env.NODE_ENV === 'development')
       console.debug('Browser Events SDK is not initialized in development environment');
     else if (pageState !== LayoutServicePageState.Normal)
       console.debug('Browser Events SDK is not initialized in edit and preview modes');
