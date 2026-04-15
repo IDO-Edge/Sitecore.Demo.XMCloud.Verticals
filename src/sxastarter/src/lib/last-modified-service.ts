@@ -57,7 +57,7 @@ export class LastModifiedService {
       });
 
       const updated = data?.layout?.item?.__updated;
-      console.log('item:', data.layout.item)
+
       return updated || null;
     } catch (error) {
       console.error('error in getLastModified:', error);

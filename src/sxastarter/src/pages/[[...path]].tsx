@@ -42,14 +42,19 @@ export const getStaticProps: GetStaticProps = async (context) => {
   const props = await sitecorePagePropsFactory.create(context);
   return {
     props,
-    revalidate: 5, // In seconds
+    revalidate: false, // In seconds
     notFound: props.notFound, // Returns custom 404 page with a status code of 404 when true
   };
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
   return {
-    paths: [],
+    paths: [
+      '/en/personal',
+      '/en/personal/everyday-banking',
+      '/en/personal/investing',
+      '/en/personal/borrowing',
+    ],
     fallback: 'blocking',
   };
 };
